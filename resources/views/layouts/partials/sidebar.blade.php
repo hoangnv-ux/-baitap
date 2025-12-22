@@ -12,11 +12,6 @@
                         <p>Dashboard</p>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="{{ route('user.listpost') }}" class="nav-link">
-                        <p>post</p>
-                    </a>
-                </li>
             </ul>
         </nav>
     </div>
