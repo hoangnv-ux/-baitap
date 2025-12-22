@@ -14,7 +14,6 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'auth' => \App\Http\Middleware\Authenticate::class,
-            'redict.if.login' => \App\Http\Middleware\Redirectloginif::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
