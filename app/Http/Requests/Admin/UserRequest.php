@@ -22,7 +22,22 @@ class UserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'email'    => 'required',
+            'password' => 'required',
+        ];
+    }
+
+    /**
+     * Get the validation messages for the defined validation rules.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'email.required'    => __('validation.required', ['attribute' => __('validation.attributes.email')]),
+            'email.email'       => __('validation.email', ['attribute' => __('validation.attributes.email')]),
+            'password.required' => __('validation.required', ['attribute' => __('validation.attributes.password')]),
         ];
     }
 }

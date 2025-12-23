@@ -5,7 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\App\Http\Services\Admin\AdminService;
-
+use App\Http\Requests\Admin\UserRequest;
+use Illuminate\Container\Attributes\Auth;
 
 class AdminAuthController extends Controller
 {
@@ -14,23 +15,28 @@ class AdminAuthController extends Controller
         $this->middleware('auth::admin',['except'=>['login']]);
     }
 
-    public function login(Request $request){
-        $inforlogin = $request->only('email','password');
-        $token = auth('admin')->attempt($inforlogin);
+    public function login(UserRequest $request){
 
-        if(!$token){
-            return redirect()->withErrors(['login'=>'invalid inforlogin'])->withInput();
+        $inforlogin = $request->validated();
+
+        if(!auth('admin')->attempt($inforlogin)){
+            return redirect()->back()
+                ->withErrors(['email'=>__('auth.failed')])
+                ->withInput();
         }
+        $request->session()->regenerate();
 
-        $cookie = cookie('admin_token',$token,60*24,null,null,null,true,false,null);
-
-        return redirect()->route('admin.dashboard')->cookie($cookie);
-
+        return redirect()->route('admin.dashboard');
 
     }
-    public function logout()
+    public function logout(Request $request)
     {
-        auth('admin')->logout();
+        Auth::guard('admin')->logout();
+        $request->session()->validate();
+        $request->session()->regenerate();
+
+
+
         return redirect()->route('admin.login');
     }
 
