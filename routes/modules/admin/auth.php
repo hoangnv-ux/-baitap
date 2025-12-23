@@ -9,8 +9,6 @@ Route::prefix('admin/auth')->group(function () {
     })->name('admin.login');
 
     Route::middleware(['auth:admin'])->group(function () {
-        Route::get('/me', function () {
-            return view('admin.auth.me');
-        })->name('admin.me');
+
     });
 });
