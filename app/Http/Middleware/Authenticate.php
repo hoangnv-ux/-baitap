@@ -4,54 +4,29 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 
 class Authenticate
 {
-    public function handle(Request $request, Closure $next, $guard = 'user')
+    public function handle(Request $request, Closure $next, $guard = 'user', $mode = 'protected')
     {
-        $cookieName = $guard === 'admin' ? 'admin_token' : 'user_token';
+
         $loginRoute = $guard === 'admin' ? 'admin.login' : 'user.login';
+        $dashboard  = $guard === 'admin' ? 'admin.dashboard' : 'user.dashboard';
 
-        // For API: get token from header
-        $token = $request->bearerToken();
+        $isloggedin = Auth::guard($guard)->check();
 
-        // For Blade: get token from cookie
-        if (!$token) {
-            $token = $request->cookie($cookieName);
-        }
-
-        if (!$token) {
-            if ($request->expectsJson()) {
-                return response()->json(['error' => 'Unauthenticated'], 401);
+        if($mode === 'protected' && !$isloggedin){
+            if($request->expectsJson()){
+                return response()->json(['error' =>'authentication required'],401);
             }
             return redirect()->route($loginRoute);
         }
 
-        try {
-            $user = auth($guard)->setToken($token)->user();
-
-            if (!$user || !($user instanceof \App\Models\Admin) && $guard === 'admin') {
-                if ($request->expectsJson()) {
-                    return response()->json(['error' => 'Unauthorized'], 401);
-                }
-                return redirect()->route($loginRoute);
-            }
-
-            if (!$user || !($user instanceof \App\Models\User) && $guard === 'user') {
-                if ($request->expectsJson()) {
-                    return response()->json(['error' => 'Unauthorized'], 401);
-                }
-                return redirect()->route($loginRoute);
-            }
-
-            auth($guard)->setUser($user);
-        } catch (JWTException $e) {
-            if ($request->expectsJson()) {
-                return response()->json(['error' => 'Token invalid'], 401);
-            }
-            return redirect()->route($loginRoute);
+        if($mode === 'redirect' && $isloggedin){
+            return redirect()->route($dashboard);
         }
 
         return $next($request);
