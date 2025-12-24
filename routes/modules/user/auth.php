@@ -7,7 +7,7 @@ use App\Http\Controllers\User\UserAuthController;
 Route::prefix('user/auth')->group(function (){
     Route::get('login', function(){
         return view('user.login');
-    })->name('user.login');
+    })->middleware('auth:user,redirect')->name('user.login');
 
     Route::post('login',[UserAuthController::class, 'login'])->name('user.login');
 
