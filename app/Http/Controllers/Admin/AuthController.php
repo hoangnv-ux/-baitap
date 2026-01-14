@@ -26,17 +26,13 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function login(Request $request)
-    {
-        $credentials = $request->only('email', 'password');
-
-        // Attempt to generate the JWT token
-        if (!$token = auth('admin')->attempt($credentials)) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+    public function login(Request $request){
+        $credentials = $request->only('email','password');
+        if(!auth()->guard('admin')->attempt(($credentials))){
+            return back()->withErrors(['message' => 'invalid credentials']);
         }
-
-        // Return the generated JWT token
-        return $this->respondWithToken($token, 'admin');
+        $request->session()->regenerate();
+        return redirect()->route('admin.dashboard');
     }
 
     /**
