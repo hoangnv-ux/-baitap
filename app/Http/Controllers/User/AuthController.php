@@ -44,13 +44,12 @@ class AuthController extends Controller
         $credentials = $request->only('email', 'password');
         $credentials['is_active'] = true;
 
-        // Attempt to generate the JWT token
-        if (!$token = auth('user')->attempt($credentials)) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+        if(!Auth::guard('user')->attempt($credentials)){
+            return back()->withErrors('error');
         }
-
-        // Return the generated JWT token
-        return $this->respondWithToken($token, 'user');
+        $request->session()->regenerate();
+        dd( $request->session()->regenerate());
+        return redirect()->route('user.login');
     }
 
     /**

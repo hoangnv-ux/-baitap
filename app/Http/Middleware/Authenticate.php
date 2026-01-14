@@ -6,53 +6,29 @@ use Closure;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
-
+use Illuminate\Support\Facades\Auth;
 class Authenticate
 {
     public function handle(Request $request, Closure $next, $guard = 'user')
     {
-        $cookieName = $guard === 'admin' ? 'admin_token' : 'user_token';
+
         $loginRoute = $guard === 'admin' ? 'admin.login' : 'user.login';
+        $dashboard  = $guard === 'admin' ? 'admin.dashboard' : 'user.dashboard';
 
-        // For API: get token from header
-        $token = $request->bearerToken();
+        $islogedin = Auth::guard($guard)->check();
 
-        // For Blade: get token from cookie
-        if (!$token) {
-            $token = $request->cookie($cookieName);
-        }
+        $currentRoute = optional($request->route()->getName());
 
-        if (!$token) {
-            if ($request->expectsJson()) {
-                return response()->json(['error' => 'Unauthenticated'], 401);
-            }
+        if(!$islogedin && $currentRoute !== $loginRoute ){
+
             return redirect()->route($loginRoute);
         }
 
-        try {
-            $user = auth($guard)->setToken($token)->user();
-
-            if (!$user || !($user instanceof \App\Models\Admin) && $guard === 'admin') {
-                if ($request->expectsJson()) {
-                    return response()->json(['error' => 'Unauthorized'], 401);
-                }
-                return redirect()->route($loginRoute);
-            }
-
-            if (!$user || !($user instanceof \App\Models\User) && $guard === 'user') {
-                if ($request->expectsJson()) {
-                    return response()->json(['error' => 'Unauthorized'], 401);
-                }
-                return redirect()->route($loginRoute);
-            }
-
-            auth($guard)->setUser($user);
-        } catch (JWTException $e) {
-            if ($request->expectsJson()) {
-                return response()->json(['error' => 'Token invalid'], 401);
-            }
-            return redirect()->route($loginRoute);
+        if($islogedin && $currentRoute === $loginRoute){
+            return redirect()->route($dashboard);
         }
+
+
 
         return $next($request);
     }
