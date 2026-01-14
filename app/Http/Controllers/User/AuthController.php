@@ -4,10 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use App\Models\User;
 use App\Models\EmailVerification;
 use App\Http\Services\User\AuthService;
 use App\Http\Resources\User\UserResource;
@@ -44,13 +41,10 @@ class AuthController extends Controller
         $credentials = $request->only('email', 'password');
         $credentials['is_active'] = true;
 
-        // Attempt to generate the JWT token
-        if (!$token = auth('user')->attempt($credentials)) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+        if(!auth()->guard('user')->attempt($credentials)){
+            return back()->withErrors(['message' => 'invalid credentials']);
         }
-
-        // Return the generated JWT token
-        return $this->respondWithToken($token, 'user');
+        return redirect()->route('user.dashboard');
     }
 
     /**
@@ -72,7 +66,7 @@ class AuthController extends Controller
     {
         auth('user')->logout();
 
-        return response()->json(['message' => 'Successfully logged out']);
+        return redirect()->route('user.login');
     }
 
     /**
